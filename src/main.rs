@@ -112,10 +112,13 @@ fn build_triple(triple: &str, release: bool, verbose: bool, features: &str, colo
 /// Find the name of the staticlibrary to build as defined in the project's `Cargo.toml`.
 fn find_lib_name(package: Option<&str>, verbose: bool) -> Result<String> {
     static ERR: &'static str = "Failed to parse `cargo read-manifest` output";
-    
-    let manifest_path = if let Some(p) = package { [p, "Cargo.toml"].join("/") }
-        else { String::from("Cargo.toml")};
-    let value = trm!(ERR; cargo_json_value(&["read-manifest", "--manifest-path", &manifest_path], verbose));
+
+    let value = if let Some(p) = package {
+        let path = [p, "Cargo.toml"].join("/");
+        trm!(ERR; cargo_json_value(&["read-manifest", "--manifest-path", &path], verbose))
+    } else {
+        trm!(ERR; cargo_json_value(&["read-manifest"], verbose))
+    };
 
     let targets = trm!(ERR; json_get!(Array, value.targets));
 
